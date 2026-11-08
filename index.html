@@ -46,7 +46,7 @@
     .muted { color: #475569; }
     #interests ul ul { list-style-type: square; }
 
-    .conference-gallery { margin-top: 1.5rem; }
+    .conference-gallery { max-width: 34rem; margin-top: 1.5rem; }
     .conference-photos {
       display: flex;
       overflow-x: auto;
@@ -62,7 +62,7 @@
     .conference-photos img {
       display: block;
       width: 100%;
-      height: clamp(13rem, 55vw, 27rem);
+      height: clamp(10rem, 42vw, 17rem);
       object-fit: contain;
       background: #e2e8f0;
       border-radius: .75rem;
@@ -173,7 +173,7 @@
           </li>
         </ul>
         <div class="conference-gallery">
-          <h3 id="conference-photos-heading">Conference Photos</h3>
+          <h3 id="conference-photos-heading">Photos</h3>
           <div class="conference-controls" id="conference-controls" hidden>
             <button type="button" data-direction="-1" aria-controls="conference-photos" aria-label="Previous photo">←</button>
             <button type="button" data-direction="1" aria-controls="conference-photos" aria-label="Next photo">→</button>
