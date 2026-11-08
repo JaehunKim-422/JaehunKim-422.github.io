@@ -71,8 +71,25 @@
       border-radius: .75rem;
     }
     .conference-photos figcaption { padding: .5rem 0; color: #475569; }
+    .album-open { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+    .album-open:focus-visible { outline: 2px solid #17477c; outline-offset: -2px; }
+    .album-viewer {
+      box-sizing: border-box;
+      width: min(54rem, calc(100% - 2rem));
+      max-height: calc(100% - 2rem);
+      padding: 1rem;
+      border: 0;
+      border-radius: .75rem;
+      color: #1e293b;
+    }
+    .album-viewer::backdrop { background: rgb(15 23 42 / .76); }
+    .album-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .album-header h3 { margin: 0; }
+    .album-viewer img { display: block; width: 100%; height: min(62vh, 40rem); object-fit: contain; background: #0f172a; }
+    .album-footer { text-align: center; margin-top: .5rem; }
+    .album-footer [aria-live] { display: inline-block; min-width: 5rem; }
     .conference-controls { text-align: right; margin: .5rem 0; }
-    .conference-controls button {
+    .conference-controls button, .album-viewer button {
       min-width: 2.75rem;
       min-height: 2.75rem;
       border: 1px solid #cbd5e1;
@@ -179,20 +196,34 @@
         <div class="conference-gallery">
           <h3 id="conference-photos-heading">Photos</h3>
           <div class="conference-controls" id="conference-controls" hidden>
-            <button type="button" data-direction="-1" aria-controls="conference-photos" aria-label="Previous photo">←</button>
-            <button type="button" data-direction="1" aria-controls="conference-photos" aria-label="Next photo">→</button>
+            <button type="button" data-direction="-1" aria-controls="conference-photos" aria-label="Previous event">←</button>
+            <button type="button" data-direction="1" aria-controls="conference-photos" aria-label="Next event">→</button>
           </div>
           <div class="conference-photos" id="conference-photos" role="region"
                aria-labelledby="conference-photos-heading" tabindex="0">
-            <figure>
-              <img src="./2026ACSMO_Jaehun.jpg" alt="Photo from ACSMO 2026" loading="lazy" decoding="async">
-              <figcaption>ACSMO 2026 · May 2026</figcaption>
-            </figure>
-            <figure>
-              <img src="./2025KSME_Jaehun.jpg" alt="Photo from KSME Spring Conference" loading="lazy" decoding="async">
-              <figcaption>KSME Spring Conference · April 2025</figcaption>
-            </figure>
           </div>
+          <template id="conference-card">
+            <figure>
+              <button class="album-open" type="button" aria-haspopup="dialog">
+                <img alt="" loading="lazy" decoding="async">
+              </button>
+              <figcaption></figcaption>
+            </figure>
+          </template>
+          <dialog class="album-viewer" id="album-viewer" aria-labelledby="album-title">
+            <div class="album-header">
+              <h3 id="album-title"></h3>
+              <form method="dialog">
+                <button type="submit" autofocus aria-label="Close photos">×</button>
+              </form>
+            </div>
+            <img id="album-photo" alt="">
+            <div class="album-footer">
+              <button type="button" id="album-prev" aria-label="Previous photo">←</button>
+              <span id="album-count" aria-live="polite"></span>
+              <button type="button" id="album-next" aria-label="Next photo">→</button>
+            </div>
+          </dialog>
         </div>
       </section>
 
@@ -232,21 +263,69 @@
   </div>
   <script>
     {
-      const photos = document.getElementById('conference-photos');
-      const controls = document.getElementById('conference-controls');
-      const slides = photos.querySelectorAll('figure');
+      // Add a filename to an event's photos array. The first photo is its cover.
+      const events = [
+        { title: "ACSMO 2026", date: "May 2026", photos: ["2026ACSMO_Jaehun.jpg"] },
+        { title: "KSME Spring Conference", date: "April 2025", photos: ["2025KSME_Jaehun.jpg"] }
+      ];
 
+      const track = document.getElementById('conference-photos');
+      const controls = document.getElementById('conference-controls');
+      const card = document.getElementById('conference-card');
+      const viewer = document.getElementById('album-viewer');
+      const title = document.getElementById('album-title');
+      const photo = document.getElementById('album-photo');
+      const count = document.getElementById('album-count');
+      const previous = document.getElementById('album-prev');
+      const next = document.getElementById('album-next');
+      let album;
+      let photoIndex = 0;
+
+      function showPhoto(index) {
+        const total = album.photos.length;
+        photoIndex = (index + total) % total;
+        photo.src = album.photos[photoIndex];
+        photo.alt = album.title + ' photo ' + (photoIndex + 1);
+        count.textContent = (photoIndex + 1) + ' / ' + total;
+      }
+
+      for (const event of events) {
+        if (event.photos.length === 0) continue;
+        const slide = card.content.cloneNode(true);
+        const button = slide.querySelector('button');
+        const total = event.photos.length;
+        const label = event.title + ' · ' + event.date + ' · ' + total + (total === 1 ? ' photo' : ' photos');
+        slide.querySelector('img').src = event.photos[0];
+        slide.querySelector('figcaption').textContent = label;
+        button.setAttribute('aria-label', 'Open photos from ' + event.title);
+        button.addEventListener('click', () => {
+          album = event;
+          title.textContent = event.title;
+          previous.hidden = next.hidden = total === 1;
+          showPhoto(0);
+          viewer.showModal();
+        });
+        track.append(slide);
+      }
+
+      previous.addEventListener('click', () => showPhoto(photoIndex - 1));
+      next.addEventListener('click', () => showPhoto(photoIndex + 1));
+      viewer.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+          event.preventDefault();
+          showPhoto(photoIndex + (event.key === 'ArrowLeft' ? -1 : 1));
+        }
+      });
+
+      const slides = track.querySelectorAll('figure');
+      controls.hidden = slides.length < 2;
       controls.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-direction]');
         if (!button) return;
-        const slideStep = slides[1].getBoundingClientRect().left -
-          slides[0].getBoundingClientRect().left;
-        const currentSlide = Math.round(photos.scrollLeft / slideStep);
-        const targetSlide = currentSlide + Number(button.dataset.direction);
-        photos.scrollTo({ left: targetSlide * slideStep });
+        const step = slides[1].getBoundingClientRect().left - slides[0].getBoundingClientRect().left;
+        const currentSlide = Math.round(track.scrollLeft / step);
+        track.scrollTo({ left: (currentSlide + Number(button.dataset.direction)) * step });
       });
-
-      controls.hidden = false;
     }
   </script>
 </body>
