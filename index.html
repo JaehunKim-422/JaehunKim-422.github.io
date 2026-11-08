@@ -49,6 +49,8 @@
     .conference-gallery { max-width: 34rem; margin-top: 1.5rem; }
     .conference-photos {
       display: flex;
+      gap: .625rem;
+      padding-inline: 14%;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
       scroll-behavior: smooth;
@@ -57,13 +59,14 @@
       flex: 0 0 100%;
       min-width: 0;
       margin: 0;
-      scroll-snap-align: start;
+      scroll-snap-align: center;
     }
     .conference-photos img {
       display: block;
       width: 100%;
       height: clamp(10rem, 42vw, 17rem);
-      object-fit: contain;
+      object-fit: cover;
+      object-position: center 40%;
       background: #e2e8f0;
       border-radius: .75rem;
     }
@@ -230,13 +233,16 @@
     {
       const photos = document.getElementById('conference-photos');
       const controls = document.getElementById('conference-controls');
+      const slides = photos.querySelectorAll('figure');
 
       controls.addEventListener('click', (event) => {
         const button = event.target.closest('button[data-direction]');
         if (!button) return;
-        const currentSlide = Math.round(photos.scrollLeft / photos.clientWidth);
+        const slideStep = slides[1].getBoundingClientRect().left -
+          slides[0].getBoundingClientRect().left;
+        const currentSlide = Math.round(photos.scrollLeft / slideStep);
         const targetSlide = currentSlide + Number(button.dataset.direction);
-        photos.scrollTo({ left: targetSlide * photos.clientWidth });
+        photos.scrollTo({ left: targetSlide * slideStep });
       });
 
       controls.hidden = false;
