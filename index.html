@@ -45,6 +45,43 @@
     .timeline { border-left: 2px solid #9bb7d5; padding-left: 1.75rem; }
     .muted { color: #475569; }
     #interests ul ul { list-style-type: square; }
+
+    .conference-gallery { margin-top: 1.5rem; }
+    .conference-photos {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+    }
+    .conference-photos figure {
+      flex: 0 0 100%;
+      min-width: 0;
+      margin: 0;
+      scroll-snap-align: start;
+    }
+    .conference-photos img {
+      display: block;
+      width: 100%;
+      height: clamp(13rem, 55vw, 27rem);
+      object-fit: contain;
+      background: #e2e8f0;
+      border-radius: .75rem;
+    }
+    .conference-photos figcaption { padding: .5rem 0; color: #475569; }
+    .conference-controls { text-align: right; margin: .5rem 0; }
+    .conference-controls button {
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: .5rem;
+      background: white;
+      color: #17477c;
+      font: inherit;
+      cursor: pointer;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .conference-photos { scroll-behavior: auto; }
+    }
   </style>
 </head>
 <body>
@@ -135,6 +172,24 @@
             Statistical Moment Analysis of Train Dynamic Characteristics Using Polynomial Chaos Expansion
           </li>
         </ul>
+        <div class="conference-gallery">
+          <h3 id="conference-photos-heading">Conference Photos</h3>
+          <div class="conference-controls" id="conference-controls" hidden>
+            <button type="button" data-direction="-1" aria-controls="conference-photos" aria-label="Previous photo">←</button>
+            <button type="button" data-direction="1" aria-controls="conference-photos" aria-label="Next photo">→</button>
+          </div>
+          <div class="conference-photos" id="conference-photos" role="region"
+               aria-labelledby="conference-photos-heading" tabindex="0">
+            <figure>
+              <img src="./2026ACSMO_Jaehun.jpg" alt="Photo from ACSMO 2026" loading="lazy" decoding="async">
+              <figcaption>ACSMO 2026 · May 2026</figcaption>
+            </figure>
+            <figure>
+              <img src="./2025KSME_Jaehun.jpg" alt="Photo from KSME Spring Conference" loading="lazy" decoding="async">
+              <figcaption>KSME Spring Conference · April 2025</figcaption>
+            </figure>
+          </div>
+        </div>
       </section>
 
       <section id="contact">
@@ -171,5 +226,21 @@
 
     <footer class="muted">Jaehun Kim · Hanyang University</footer>
   </div>
+  <script>
+    {
+      const photos = document.getElementById('conference-photos');
+      const controls = document.getElementById('conference-controls');
+
+      controls.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-direction]');
+        if (!button) return;
+        const currentSlide = Math.round(photos.scrollLeft / photos.clientWidth);
+        const targetSlide = currentSlide + Number(button.dataset.direction);
+        photos.scrollTo({ left: targetSlide * photos.clientWidth });
+      });
+
+      controls.hidden = false;
+    }
+  </script>
 </body>
 </html>
